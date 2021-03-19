@@ -4,6 +4,7 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ListView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -13,56 +14,50 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.Task;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 
-public class SuccessActivity extends AppCompatActivity implements View.OnClickListener {
-	Button btn_insert;
-	EditText btn_edit;
+import java.util.ArrayList;
+import java.util.List;
+
+
+public class SuccessActivity extends AppCompatActivity {
+
+	ListView listView;
 	DatabaseReference databaseReference;
+	List<Success> list;
+
 	@Override
-	protected void onCreate(@Nullable Bundle savedInstanceState) {
+	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_success);
-		btn_insert= findViewById(R.id.button);
-		btn_edit=findViewById(R.id.editText1);
+
+		listView = findViewById(R.id.listviewViewData);
+
+		list = new ArrayList<>();
 		databaseReference = FirebaseDatabase.getInstance().getReference("success");
-		btn_insert.setOnClickListener(this);
 
-	}
+		databaseReference.addValueEventListener(new ValueEventListener() {
+			@Override
+			public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+				list.clear();
 
-
-	@Override
-	public void onClick(View v) {
-		switch (v.getId()) {
-			case R.id.button:
-				String Text = btn_edit.getText().toString().trim();
-
-				if (Text.isEmpty()) {
-					btn_edit.setError("Name is required");
-					btn_edit.requestFocus();
-					return;
+				for(DataSnapshot dataSnapshot1 : dataSnapshot.getChildren()){
+					Success success = dataSnapshot1.getValue(Success.class);
+					list.add(success);
 				}
-				String ID = databaseReference.push().getKey();
-				Success success = new Success(ID, Text);
-				databaseReference.child(ID).setValue(success).addOnCompleteListener(new OnCompleteListener<Void>() {
-					@Override
-					public void onComplete(@NonNull Task<Void> task) {
-						if (task.isSuccessful()) {
-							Toast.makeText(getApplicationContext(), "quotes added successfully", Toast.LENGTH_LONG).show();
-						}
-					}
-				})
-						.addOnFailureListener(new OnFailureListener() {
-							@Override
-							public void onFailure(@NonNull Exception e) {
-								Toast.makeText(SuccessActivity.this, e.getMessage(), Toast.LENGTH_SHORT).show();
-							}
-						});
-		}
 
+				MyAdapter adapter = new MyAdapter(SuccessActivity.this, list );
+				listView.setAdapter(adapter);
+			}
 
+			@Override
+			public void onCancelled(@NonNull DatabaseError databaseError) {
 
-		}
+			}
+		});
 	}
-
+}

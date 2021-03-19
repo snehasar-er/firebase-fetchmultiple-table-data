@@ -27,6 +27,10 @@ public class Success {
 				", text='" + text + '\'' +
 				'}';
 	}
+public Success()
+	{
+
+	}
 
 	public Success(String id, String text) {
 		this.id = id;
